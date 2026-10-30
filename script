@@ -1,0 +1,89 @@
+local Body = [==[
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
+    
+    local QueueTeleport = queue_on_teleport
+        or queueonteleport
+        or (syn and syn.queue_on_teleport)
+    
+    assert(type(QueueTeleport) == "function", "Teleport queue is unavailable.")
+    assert(type(firetouchinterest) == "function", "Touch simulation is unavailable.")
+    
+    local Players = game:GetService("Players")
+    
+    repeat
+        task.wait()
+    until Players.LocalPlayer
+    
+    local Player = Players.LocalPlayer
+    local Houses = workspace:WaitForChild("Houses")
+    local HouseList = Houses:GetChildren()
+    local HouseCount = #HouseList
+    
+    local function GetRoot()
+        while true do
+            local Character = Player.Character
+            local Hrp = Character and Character:FindFirstChild("HumanoidRootPart")
+    
+            if Hrp and Hrp:IsDescendantOf(workspace) then
+                return Character, Hrp
+            end
+    
+            task.wait(0.1)
+        end
+    end
+    
+    for _, House in ipairs(HouseList) do
+        local Door = House:FindFirstChild("Door")
+        local TouchPart = Door and Door:FindFirstChild("DoorInnerTouch")
+    
+        if not TouchPart or not TouchPart:IsA("BasePart") then
+            continue
+        end
+    
+        if not TouchPart:FindFirstChild("TouchInterest") then
+            continue
+        end
+    
+        local Character, Hrp = GetRoot()
+    
+        local Success, ErrorMessage = pcall(function()
+            if not TouchPart:IsDescendantOf(workspace) then
+                return
+            end
+    
+            firetouchinterest(Hrp, TouchPart, 0)
+            task.wait(0.2)
+    
+            if Player.Character == Character
+                and Hrp:IsDescendantOf(workspace)
+                and TouchPart:IsDescendantOf(workspace) then
+                firetouchinterest(Hrp, TouchPart, 1)
+            end
+        end)
+    
+        if not Success then
+            warn(("[House Collector] %s: %s"):format(House.Name, tostring(ErrorMessage)))
+        end
+    end
+    
+    task.wait(7 + HouseCount)
+    
+    QueueTeleport(("local Body = %q\n%s"):format(Body, Body))
+    
+    local ServerHopSource = game:HttpGet(
+        "https://raw.githubusercontent.com/Cesare0328/my-scripts/refs/heads/main/CachedServerhop.lua"
+    )
+    
+    local ServerHop, CompileError = loadstring(ServerHopSource)
+    assert(ServerHop, CompileError)
+    ServerHop()
+    ]==]
+    
+    local Run, CompileError = loadstring(
+        ("local Body = %q\n%s"):format(Body, Body)
+    )
+    
+    assert(Run, CompileError)
+    Run()
